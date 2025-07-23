@@ -91,6 +91,39 @@ namespace Notepads.Utilities
             return true;
         }
 
+        public static string RemoveInvalidFilenameChars(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+                return string.Empty;
+
+            var illegalChars = Path.GetInvalidFileNameChars();
+            
+            // Additional characters that cause issues in Windows filenames
+            var additionalChars = new[] { '<', '>', ':', '"', '|', '?', '*', '/', '\\' };
+            var allInvalidChars = illegalChars.Union(additionalChars).ToArray();
+
+            // Remove invalid characters
+            var cleanFilename = new string(filename.Where(c => !allInvalidChars.Contains(c)).ToArray());
+
+            // Remove leading/trailing whitespace
+            cleanFilename = cleanFilename.Trim();
+
+            // Remove trailing dots
+            cleanFilename = cleanFilename.TrimEnd('.');
+
+            // Handle reserved names (PRN, AUX, CON, etc.)
+            var reservedNames = new[] { "PRN", "AUX", "NUL", "CON", "CLOCK$", 
+                "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+
+            if (reservedNames.Any(name => string.Equals(cleanFilename, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                cleanFilename = "_" + cleanFilename;
+            }
+
+            return cleanFilename;
+        }
+
         public static bool IsFullPath(string path)
         {
             return !String.IsNullOrWhiteSpace(path)
